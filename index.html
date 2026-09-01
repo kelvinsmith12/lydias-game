@@ -1,0 +1,1864 @@
+以下是在上一版基础上只保留你列出的功能后的最终版。直接保存为 `index.html`，并把 `bgm.mp3` 和 `card-back.jpg` 放在同一文件夹即可。
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lydia's Game</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Long+Cang&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --blue:#a8d8ea;
+  --blue-mid:#7cc4dd;
+  --blue-deep:#5fb4cf;
+  --blue-soft:#d6ecf5;
+  --blue-pale:#eaf6fb;
+  --gold:#f5d76e;
+  --ink:#3e6b80;
+  --ink-deep:#2c4a5d;
+  --white:#fff;
+}
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',-apple-system,sans-serif;
+  color:var(--ink);
+  background:#eaf6fb;
+  -webkit-font-smoothing:antialiased;
+}
+
+button,label{
+  -webkit-tap-highlight-color:transparent;
+}
+
+button{
+  font:inherit;
+  border:0;
+  cursor:pointer;
+}
+
+.screen{
+  position:fixed;
+  inset:0;
+  display:none;
+  overflow:hidden;
+}
+
+.screen.active{
+  display:block;
+}
+
+/* 开屏 */
+#intro{
+  cursor:pointer;
+  background:
+    radial-gradient(circle at 18% 22%,rgba(255,255,255,.9),transparent 38%),
+    radial-gradient(circle at 82% 78%,rgba(168,216,234,.55),transparent 42%),
+    linear-gradient(180deg,#ffffff 0%,#eaf6fb 50%,#c8e4ee 100%);
+}
+
+#introCanvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:1;
+}
+
+.intro-content,
+.intro-hint,
+.intro-studio,
+.logo-wrap,
+.logo-glow,
+.float-element{
+  pointer-events:none !important;
+}
+
+.intro-content{
+  position:absolute;
+  inset:0;
+  z-index:5;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+.logo-wrap{
+  position:relative;
+  display:inline-block;
+  margin-bottom:30px;
+}
+
+.logo-main{
+  position:relative;
+  z-index:3;
+  font-family:'Ma Shan Zheng','PingFang SC',cursive;
+  font-size:clamp(5rem,14vw,10rem);
+  font-weight:400;
+  letter-spacing:.04em;
+  background:linear-gradient(180deg,#5fb4cf 0%,#7cc4dd 45%,#a8d8ea 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 22px rgba(95,180,207,.55));
+  animation:logoAppear 2.2s cubic-bezier(.16,1,.3,1) both;
+  line-height:1;
+}
+
+.logo-glow{
+  position:absolute;
+  inset:-90px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(124,196,221,.45),rgba(168,216,234,.25) 30%,transparent 70%);
+  animation:logoBreathe 4s ease-in-out infinite;
+  z-index:1;
+  filter:blur(30px);
+}
+
+@keyframes logoAppear{
+  from{opacity:0;transform:translateY(40px) scale(.92);filter:blur(20px)}
+  to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+}
+
+@keyframes logoBreathe{
+  0%,100%{opacity:.5;transform:scale(.9)}
+  50%{opacity:1;transform:scale(1.15)}
+}
+
+.intro-sub{
+  font-family:'Long Cang','Ma Shan Zheng','PingFang SC',cursive;
+  font-size:clamp(1.4rem,2.6vw,2.2rem);
+  color:rgba(44,74,93,.85);
+  letter-spacing:.4em;
+  margin-top:14px;
+  font-weight:400;
+  text-shadow:0 0 18px rgba(255,255,255,.8);
+  animation:subAppear 1.6s .4s both;
+}
+
+@keyframes subAppear{
+  from{opacity:0;transform:translateY(18px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.intro-hint{
+  position:absolute;
+  bottom:13%;
+  left:50%;
+  transform:translateX(-50%);
+  color:rgba(62,107,128,.7);
+  font-size:.88rem;
+  letter-spacing:.38em;
+  animation:pulse 2.5s ease-in-out infinite;
+  z-index:10;
+}
+
+.intro-studio{
+  position:absolute;
+  bottom:5%;
+  left:50%;
+  transform:translateX(-50%);
+  color:rgba(62,107,128,.5);
+  font-size:.72rem;
+  letter-spacing:.5em;
+  text-align:center;
+  z-index:10;
+}
+
+.intro-studio span{
+  display:block;
+  font-size:.58rem;
+  margin-top:5px;
+  opacity:.7;
+  letter-spacing:.3em;
+}
+
+@keyframes pulse{
+  0%,100%{opacity:.4}
+  50%{opacity:.9}
+}
+
+.float-element{
+  position:absolute;
+  opacity:.5;
+  animation:floatAround linear infinite;
+  z-index:2;
+}
+
+@keyframes floatAround{
+  0%{transform:translate(0,0) rotate(0)}
+  25%{transform:translate(40px,-25px) rotate(90deg)}
+  50%{transform:translate(-30px,-50px) rotate(180deg)}
+  75%{transform:translate(-40px,25px) rotate(270deg)}
+  100%{transform:translate(0,0) rotate(360deg)}
+}
+
+/* 卡牌 */
+#cards{
+  background:
+    radial-gradient(circle at 50% 46%,rgba(255,255,255,.96),transparent 28%),
+    linear-gradient(180deg,#ffffff 0%,#eaf6fb 50%,#c8e4ee 100%);
+}
+
+#cardsCanvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  cursor:pointer;
+}
+
+.cards-hint{
+  position:absolute;
+  bottom:8%;
+  left:50%;
+  transform:translateX(-50%);
+  color:rgba(62,107,128,.85);
+  font-size:.88rem;
+  letter-spacing:.32em;
+  z-index:3;
+  animation:pulse 2s ease-in-out infinite;
+}
+
+/* 主页 */
+#home{
+  background:
+    radial-gradient(circle at 18% 22%,rgba(255,255,255,.9),transparent 38%),
+    radial-gradient(circle at 82% 78%,rgba(168,216,234,.5),transparent 42%),
+    linear-gradient(180deg,#ffffff 0%,#eaf6fb 40%,#c8e4ee 100%);
+}
+
+#homeBg,#homeParticles{
+  position:absolute;
+  inset:0;
+}
+
+#homeBg{z-index:1}
+
+#homeParticles{
+  z-index:2;
+  pointer-events:none;
+}
+
+.cloud{
+  position:absolute;
+  width:180px;
+  height:50px;
+  border-radius:60px;
+  background:rgba(255,255,255,.7);
+  box-shadow:0 12px 30px rgba(95,180,207,.15);
+  opacity:.8;
+  animation:cloudMove 30s linear infinite;
+  pointer-events:none;
+}
+
+.cloud::before,
+.cloud::after{
+  content:"";
+  position:absolute;
+  bottom:14px;
+  border-radius:50%;
+  background:inherit;
+}
+
+.cloud::before{
+  width:80px;
+  height:80px;
+  left:26px;
+}
+
+.cloud::after{
+  width:110px;
+  height:110px;
+  right:18px;
+}
+
+.cloud.one{
+  top:18%;
+  left:-220px;
+  transform:scale(.75);
+}
+
+.cloud.two{
+  top:46%;
+  left:-280px;
+  transform:scale(.5);
+  opacity:.5;
+  animation-duration:42s;
+  animation-delay:-14s;
+}
+
+.cloud.three{
+  top:72%;
+  left:-260px;
+  transform:scale(.62);
+  opacity:.55;
+  animation-duration:36s;
+  animation-delay:-9s;
+}
+
+@keyframes cloudMove{
+  from{margin-left:0}
+  to{margin-left:calc(100vw + 500px)}
+}
+
+.home-header{
+  position:absolute;
+  top:30px;
+  left:44px;
+  right:44px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  z-index:5;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:rgba(44,74,93,.92);
+  font-size:22px;
+  font-weight:500;
+  letter-spacing:.04em;
+  font-family:'Ma Shan Zheng','PingFang SC',cursive;
+}
+
+.brand-mark{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  color:#fff;
+  background:linear-gradient(135deg,#7cc4dd,#a8d8ea);
+  box-shadow:0 6px 18px rgba(95,180,207,.35);
+  font-size:14px;
+}
+
+.home-main{
+  position:absolute;
+  inset:0;
+  z-index:4;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  pointer-events:none;
+}
+
+.home-orbit{
+  position:relative;
+  width:230px;
+  height:230px;
+  margin-bottom:24px;
+  pointer-events:auto;
+}
+
+.home-orbit::before,
+.home-orbit::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  border:1px solid rgba(95,180,207,.35);
+  animation:spin 16s linear infinite;
+}
+
+.home-orbit::after{
+  inset:18px;
+  border-style:dashed;
+  border-color:rgba(184,224,210,.6);
+  animation-duration:11s;
+  animation-direction:reverse;
+}
+
+.home-orbit-core{
+  position:absolute;
+  inset:62px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  font-size:46px;
+  background:radial-gradient(circle,#fff 0%,#d6ecf5 45%,#a8d8ea 100%);
+  box-shadow:
+    0 0 30px rgba(124,196,221,.55),
+    0 0 80px rgba(168,216,234,.5);
+  animation:float 4s ease-in-out infinite;
+}
+
+.home-title{
+  color:rgba(44,74,93,.95);
+  font-size:clamp(26px,3.8vw,42px);
+  font-weight:500;
+  letter-spacing:.12em;
+  font-family:'Ma Shan Zheng','PingFang SC',cursive;
+  pointer-events:auto;
+}
+
+.home-sub{
+  margin-top:10px;
+  color:rgba(62,107,128,.7);
+  font-size:14px;
+  letter-spacing:.22em;
+  font-weight:300;
+  pointer-events:auto;
+}
+
+.button-stack{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+  margin-top:38px;
+  pointer-events:auto;
+}
+
+.upload-label,
+.reuse-button,
+.result-button{
+  border:0;
+  cursor:pointer;
+  border-radius:999px;
+  transition:transform .25s cubic-bezier(.2,.8,.2,1),
+    box-shadow .25s ease,
+    filter .25s ease;
+}
+
+.upload-label{
+  position:relative;
+  min-width:240px;
+  padding:18px 42px;
+  color:#2c4a5d;
+  background:linear-gradient(180deg,#ffffff 0%,#eaf6fb 100%);
+  box-shadow:
+    0 8px 22px rgba(95,180,207,.28),
+    inset 0 0 0 2px #a8d8ea,
+    inset 0 0 0 4px #ffffff,
+    inset 0 0 0 5px rgba(168,216,234,.5);
+  font-size:16px;
+  letter-spacing:.14em;
+  font-weight:500;
+}
+
+.upload-label:hover,
+.reuse-button:hover,
+.result-button:hover{
+  transform:translateY(-3px) scale(1.03);
+}
+
+.reuse-button{
+  display:none;
+  padding:10px 26px;
+  color:rgba(44,74,93,.85);
+  background:rgba(255,255,255,.85);
+  border:1.5px solid rgba(168,216,234,.5);
+  box-shadow:0 6px 16px rgba(95,180,207,.18);
+  font-size:13px;
+  letter-spacing:.12em;
+}
+
+.reuse-button.visible{
+  display:block;
+}
+
+.upload-note{
+  margin-top:16px;
+  color:rgba(62,107,128,.55);
+  font-size:11px;
+  letter-spacing:.14em;
+  pointer-events:auto;
+}
+
+.home-footer{
+  position:absolute;
+  bottom:18px;
+  left:50%;
+  transform:translateX(-50%);
+  color:rgba(62,107,128,.4);
+  font-size:10px;
+  letter-spacing:.3em;
+  z-index:5;
+}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@keyframes float{
+  0%,100%{transform:translateY(0) rotate(0)}
+  50%{transform:translateY(-8px) rotate(4deg)}
+}
+
+/* 弹窗 */
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:20;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(168,216,234,.35);
+  backdrop-filter:blur(18px);
+}
+
+.modal.visible{display:flex}
+
+.modal-box{
+  width:min(440px,calc(100vw - 40px));
+  padding:40px 40px 34px;
+  text-align:center;
+  border-radius:28px;
+  background:linear-gradient(135deg,#fff 0%,#eaf6fb 100%);
+  border:2px solid #a8d8ea;
+  box-shadow:0 25px 70px rgba(95,180,207,.25);
+}
+
+.modal-title{
+  color:rgba(44,74,93,.95);
+  font-size:19px;
+  font-weight:500;
+  letter-spacing:.12em;
+  font-family:'Ma Shan Zheng','PingFang SC',cursive;
+}
+
+.modal-actions{
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  margin-top:26px;
+}
+
+.modal-btn{
+  min-width:96px;
+  padding:12px 24px;
+  border-radius:999px;
+  cursor:pointer;
+  font-size:14px;
+  letter-spacing:.16em;
+  font-weight:500;
+  font-family:'PingFang SC',sans-serif;
+}
+
+.modal-no{
+  color:rgba(62,107,128,.85);
+  background:#fff;
+  border:1.5px solid #a8d8ea !important;
+}
+
+.modal-yes{
+  color:#fff;
+  background:linear-gradient(135deg,#7cc4dd,#a8d8ea);
+  box-shadow:0 8px 22px rgba(95,180,207,.4);
+}
+
+/* 抽奖页 */
+#game{
+  background:
+    radial-gradient(circle at 18% 22%,rgba(255,255,255,.9),transparent 38%),
+    radial-gradient(circle at 82% 78%,rgba(168,216,234,.5),transparent 42%),
+    linear-gradient(180deg,#ffffff 0%,#eaf6fb 40%,#c8e4ee 100%);
+}
+
+#gameCanvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:3;
+}
+
+.game-status{
+  position:absolute;
+  top:36px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:5;
+  color:rgba(44,74,93,.85);
+  font-size:13px;
+  letter-spacing:.22em;
+  font-weight:500;
+  font-family:'Ma Shan Zheng','PingFang SC',cursive;
+  opacity:0;
+  transition:opacity .5s ease;
+}
+
+.game-status.visible{
+  opacity:1;
+}
+
+.result-layer{
+  position:absolute;
+  inset:0;
+  z-index:8;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+}
+
+.result-layer.visible{
+  display:flex;
+}
+
+.result-photo{
+  position:relative;
+  max-width:min(68vw,680px);
+  max-height:64vh;
+  padding:14px;
+  border-radius:26px;
+  background:linear-gradient(135deg,#fff,#eaf6fb,#fff);
+  box-shadow:
+    0 30px 100px rgba(95,180,207,.3),
+    0 0 0 3px #fff,
+    0 0 0 4px rgba(168,216,234,.6),
+    0 0 60px rgba(245,215,110,.5);
+  animation:resultIn 1.1s cubic-bezier(.16,1,.3,1) both;
+}
+
+.result-photo img{
+  display:block;
+  max-width:100%;
+  max-height:calc(64vh - 28px);
+  border-radius:18px;
+  object-fit:contain;
+}
+
+.result-photo::before,
+.result-photo::after{
+  content:"✦";
+  position:absolute;
+  color:#f5d76e;
+  font-size:26px;
+  text-shadow:0 0 14px rgba(245,215,110,.7);
+  animation:starPulse 1.8s ease-in-out infinite;
+}
+
+.result-photo::before{
+  top:-20px;
+  left:-20px;
+}
+
+.result-photo::after{
+  right:-20px;
+  bottom:-20px;
+  animation-delay:.7s;
+}
+
+@keyframes resultIn{
+  from{
+    opacity:0;
+    transform:translateY(40px) scale(.5) rotate(-4deg);
+    filter:blur(10px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1) rotate(0);
+    filter:blur(0);
+  }
+}
+
+@keyframes starPulse{
+  0%,100%{transform:scale(.8) rotate(0);opacity:.55}
+  50%{transform:scale(1.25) rotate(90deg);opacity:1}
+}
+
+.result-buttons{
+  position:fixed;
+  bottom:46px;
+  left:50%;
+  transform:translateX(-50%) translateY(20px);
+  z-index:50;
+  display:flex;
+  gap:12px;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .6s ease,transform .6s ease;
+}
+
+.result-buttons.visible{
+  opacity:1;
+  pointer-events:auto;
+  transform:translateX(-50%) translateY(0);
+}
+
+.result-button{
+  min-width:148px;
+  padding:13px 24px;
+  color:#fff;
+  background:linear-gradient(135deg,#7cc4dd,#a8d8ea);
+  box-shadow:0 10px 26px rgba(95,180,207,.28);
+  font-size:14px;
+  letter-spacing:.14em;
+  font-weight:500;
+}
+
+.result-button.secondary{
+  color:rgba(44,74,93,.9);
+  background:#fff;
+  border:1.5px solid #a8d8ea;
+  box-shadow:0 8px 22px rgba(95,180,207,.18);
+}
+
+/* 粒子 */
+#particles{
+  position:absolute;
+  inset:0;
+  z-index:9;
+  pointer-events:none;
+  overflow:hidden;
+}
+
+.spark{
+  position:absolute;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 0 12px currentColor;
+  animation:sparkOut 1.3s ease-out forwards;
+}
+
+@keyframes sparkOut{
+  from{
+    opacity:1;
+    transform:translate(0,0) scale(.3);
+  }
+  to{
+    opacity:0;
+    transform:translate(var(--x),var(--y)) scale(1.4);
+  }
+}
+
+/* 响应式 */
+@media(max-width:700px){
+  .home-header{
+    left:22px;
+    right:22px;
+    top:22px;
+  }
+
+  .home-orbit{
+    width:180px;
+    height:180px;
+  }
+
+  .home-orbit-core{
+    inset:52px;
+    font-size:36px;
+  }
+
+  .home-title{
+    font-size:24px;
+  }
+
+  .upload-label{
+    min-width:220px;
+    padding:16px 28px;
+    font-size:14px;
+  }
+
+  .result-photo{
+    max-width:88vw;
+    max-height:58vh;
+  }
+
+  .result-buttons{
+    bottom:24px;
+  }
+
+  .result-button{
+    min-width:124px;
+    padding:12px 14px;
+    font-size:12px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- 开屏 -->
+<section id="intro" class="screen active">
+  <canvas id="introCanvas"></canvas>
+
+  <div class="float-element" style="top:14%;left:10%;font-size:2.4rem;animation-duration:22s">❄</div>
+  <div class="float-element" style="top:24%;right:11%;font-size:1.8rem;animation-duration:26s;animation-delay:-5s">✦</div>
+  <div class="float-element" style="bottom:32%;left:8%;font-size:2.1rem;animation-duration:23s;animation-delay:-8s">✧</div>
+  <div class="float-element" style="bottom:22%;right:14%;font-size:1.9rem;animation-duration:19s;animation-delay:-3s">☁</div>
+  <div class="float-element" style="top:50%;left:4%;font-size:1.7rem;animation-duration:28s;animation-delay:-10s">✦</div>
+  <div class="float-element" style="top:62%;right:4%;font-size:1.9rem;animation-duration:25s;animation-delay:-6s">❄</div>
+
+  <div class="intro-content">
+    <div class="logo-wrap">
+      <div class="logo-glow"></div>
+      <div class="logo-main">Lydia</div>
+    </div>
+    <div class="intro-sub">向快乐出发</div>
+  </div>
+
+  <div class="intro-hint">· 点击屏幕开启 ·</div>
+  <div class="intro-studio">LYDIA'S GAME STUDIO<span>PRESENTS</span></div>
+</section>
+
+<!-- 卡牌 -->
+<section id="cards" class="screen">
+  <canvas id="cardsCanvas"></canvas>
+  <div class="cards-hint">点击任意卡牌揭晓</div>
+</section>
+
+<!-- 主页 -->
+<section id="home" class="screen">
+  <canvas id="homeBg"></canvas>
+  <canvas id="homeParticles"></canvas>
+
+  <div class="cloud one"></div>
+  <div class="cloud two"></div>
+  <div class="cloud three"></div>
+
+  <header class="home-header">
+    <div class="brand">
+      <div class="brand-mark">✦</div>
+      <span>Lydia's Game</span>
+    </div>
+  </header>
+
+  <main class="home-main">
+    <div class="home-orbit">
+      <div class="home-orbit-core">☁</div>
+    </div>
+
+    <h1 class="home-title">你好呀，青春</h1>
+    <p class="home-sub">留下属于你的碎片 · 让回忆闪光</p>
+
+    <div class="button-stack">
+      <label class="upload-label" for="photoInput">📷 上传照片</label>
+      <input id="photoInput" type="file" accept="image/*" multiple hidden>
+
+      <button id="reuseBtn" class="reuse-button">
+        ✨ 使用上次的图片
+      </button>
+    </div>
+
+    <p class="upload-note">最多 100 张 · 图片仅保存在你的设备</p>
+  </main>
+
+  <footer class="home-footer">LYDIA'S GAME STUDIO</footer>
+</section>
+
+<!-- 弹窗 -->
+<div id="modal" class="modal">
+  <div class="modal-box">
+    <h2 class="modal-title">准备好开启命运之轮了吗？</h2>
+    <div class="modal-actions">
+      <button id="noBtn" class="modal-btn modal-no">No</button>
+      <button id="yesBtn" class="modal-btn modal-yes">Yes</button>
+    </div>
+  </div>
+</div>
+
+<!-- 抽奖页 -->
+<section id="game" class="screen">
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="gameStatus" class="game-status">照片正在旋转 · 请等待命运揭晓</div>
+
+  <div id="particles"></div>
+
+  <div id="resultLayer" class="result-layer">
+    <div id="resultPhoto" class="result-photo">
+      <img id="resultImg" alt="抽中的照片">
+    </div>
+  </div>
+
+  <div id="resultButtons" class="result-buttons">
+    <button id="againBtn" class="result-button">再来一次</button>
+    <button id="backHomeBtn" class="result-button secondary">返回主页</button>
+  </div>
+</section>
+
+<!-- 背景音乐 -->
+<audio id="bgm" src="bgm.mp3" loop preload="auto"></audio>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+const STORAGE_KEY = "lydia_last_photos";
+
+const state = {
+  photos: [],
+  selectedPhotos: [],
+  lastWinnerSrc: null
+};
+
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(el => {
+    el.classList.remove("active");
+  });
+  $(id).classList.add("active");
+}
+
+function readSavedPhotos(){
+  try{
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    return Array.isArray(data) ? data : [];
+  }catch{
+    return [];
+  }
+}
+
+function savePhotos(photos){
+  state.photos = [...photos];
+
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(photos));
+  }catch(error){
+    console.warn("图片过大，无法写入 localStorage，但当前页面仍可继续抽取。");
+  }
+}
+
+function updateReuseButton(){
+  $("reuseBtn").classList.toggle("visible", readSavedPhotos().length > 0);
+}
+
+function shuffle(array){
+  const result = [...array];
+
+  for(let i=result.length - 1;i>0;i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i],result[j]] = [result[j],result[i]];
+  }
+
+  return result;
+}
+
+function wait(ms){
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/* 背景音乐 */
+const bgm = $("bgm");
+
+function startBGM(){
+  bgm.volume = 0.22;
+  bgm.play().catch(() => {});
+}
+
+/* 音效 */
+let audioContext = null;
+
+function initAudio(){
+  if(!audioContext){
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  if(audioContext.state === "suspended"){
+    audioContext.resume();
+  }
+}
+
+function tone(freq,duration=.16,type="sine",volume=.06){
+  try{
+    initAudio();
+
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq,audioContext.currentTime);
+
+    gain.gain.setValueAtTime(0,audioContext.currentTime);
+    gain.gain.linearRampToValueAtTime(volume,audioContext.currentTime + .015);
+    gain.gain.exponentialRampToValueAtTime(
+      .001,
+      audioContext.currentTime + duration
+    );
+
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+
+    osc.start();
+    osc.stop(audioContext.currentTime + duration);
+  }catch{}
+}
+
+function playClick(){
+  tone(720,.08,"triangle",.045);
+}
+
+function playReveal(){
+  [523,659,784,1047,1319].forEach((f,i) => {
+    setTimeout(() => tone(f,.3,"triangle",.075),i * 90);
+  });
+}
+
+/* 开屏粒子背景（减少数量） */
+(function initIntroBackground(){
+  const canvas = $("introCanvas");
+  const ctx = canvas.getContext("2d");
+  const particles = [];
+
+  for(let i=0;i<50;i++){
+    particles.push({
+      x:Math.random(),
+      y:Math.random(),
+      vx:(Math.random()-.5) * .0006,
+      vy:(Math.random()-.5) * .0006,
+      s:1 + Math.random() * 2.5,
+      color:["rgba(255,255,255,.85)","rgba(168,216,234,.7)","rgba(245,215,110,.55)","rgba(200,182,226,.6)"][Math.floor(Math.random()*4)]
+    });
+  }
+
+  function resize(){
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+  }
+
+  resize();
+  addEventListener("resize",resize);
+
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if(p.x < 0 || p.x > 1) p.vx *= -1;
+      if(p.y < 0 || p.y > 1) p.vy *= -1;
+
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x * canvas.width, p.y * canvas.height, p.s, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+})();
+
+/* 主页背景（减少数量） */
+(function initHomeBackground(){
+  const bg = $("homeBg");
+  const bgCtx = bg.getContext("2d");
+  const particles = $("homeParticles");
+  const particleCtx = particles.getContext("2d");
+
+  const dots = [];
+  const petals = [];
+
+  for(let i=0;i<24;i++){
+    dots.push({
+      x:Math.random(),
+      y:Math.random(),
+      vx:(Math.random()-.5) * .0004,
+      vy:(Math.random()-.5) * .0004,
+      s:1 + Math.random() * 2,
+      color:["rgba(255,255,255,.85)","rgba(184,224,210,.6)","rgba(245,215,110,.5)","rgba(168,216,234,.7)"][Math.floor(Math.random()*4)]
+    });
+  }
+
+  for(let i=0;i<6;i++){
+    petals.push({
+      x:Math.random(),
+      y:Math.random()-.5,
+      vy:.0002 + Math.random() * .0003,
+      vx:(Math.random()-.5) * .0003,
+      s:6 + Math.random() * 7,
+      r:Math.random() * Math.PI * 2,
+      vr:(Math.random()-.5) * .015,
+      o:.3 + Math.random() * .35
+    });
+  }
+
+  function resize(){
+    [bg,particles].forEach(canvas => {
+      canvas.width = innerWidth;
+      canvas.height = innerHeight;
+    });
+  }
+
+  resize();
+  addEventListener("resize",resize);
+
+  function draw(){
+    bgCtx.clearRect(0,0,bg.width,bg.height);
+
+    const grad = bgCtx.createRadialGradient(
+      bg.width*.5,
+      bg.height*.3,
+      0,
+      bg.width*.5,
+      bg.height*.3,
+      bg.width*.7
+    );
+
+    grad.addColorStop(0,"rgba(255,255,255,.45)");
+    grad.addColorStop(.6,"rgba(168,216,234,.18)");
+    grad.addColorStop(1,"transparent");
+    bgCtx.fillStyle = grad;
+    bgCtx.fillRect(0,0,bg.width,bg.height);
+
+    particleCtx.clearRect(0,0,particles.width,particles.height);
+
+    dots.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if(p.x < 0 || p.x > 1) p.vx *= -1;
+      if(p.y < 0 || p.y > 1) p.vy *= -1;
+
+      particleCtx.fillStyle = p.color;
+      particleCtx.beginPath();
+      particleCtx.arc(p.x * particles.width, p.y * particles.height, p.s, 0, Math.PI * 2);
+      particleCtx.fill();
+    });
+
+    petals.forEach(p => {
+      p.y += p.vy;
+      p.x += p.vx;
+      p.r += p.vr;
+
+      if(p.y > 1.1){
+        p.y = -.1;
+        p.x = Math.random();
+      }
+
+      particleCtx.save();
+      particleCtx.translate(p.x * particles.width, p.y * particles.height);
+      particleCtx.rotate(p.r);
+
+      particleCtx.fillStyle = `rgba(168,216,234,${p.o})`;
+      particleCtx.beginPath();
+      particleCtx.ellipse(0,0,p.s,p.s*.6,0,0,Math.PI*2);
+      particleCtx.fill();
+
+      particleCtx.restore();
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+})();
+
+/* 卡牌背面 */
+let cardBackImage = null;
+
+(function loadCardBack(){
+  const img = new Image();
+
+  img.onload = () => {
+    cardBackImage = img;
+  };
+
+  img.onerror = () => {
+    cardBackImage = null;
+  };
+
+  img.src = "card-back.jpg";
+})();
+
+function drawFallbackCard(ctx,w,h,index){
+  const gradient = ctx.createLinearGradient(0,0,w,h);
+  gradient.addColorStop(0,"#ffffff");
+  gradient.addColorStop(.5,"#d6ecf5");
+  gradient.addColorStop(1,"#a8d8ea");
+
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0,0,w,h);
+
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth = 10;
+  ctx.strokeRect(8,8,w-16,h-16);
+
+  ctx.strokeStyle = "rgba(124,196,221,.9)";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(19,19,w-38,h-38);
+
+  const cx = w/2;
+  const cy = h/2;
+
+  ctx.save();
+  ctx.translate(cx,cy);
+
+  ctx.strokeStyle = "rgba(255,255,255,.9)";
+  ctx.lineWidth = 2;
+
+  for(let r=58;r<=128;r+=22){
+    ctx.beginPath();
+    ctx.arc(0,0,r,0,Math.PI*2);
+    ctx.stroke();
+  }
+
+  for(let i=0;i<8;i++){
+    ctx.save();
+    ctx.rotate(i * Math.PI / 4);
+    ctx.beginPath();
+    ctx.moveTo(0,-142);
+    ctx.lineTo(0,-122);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.ellipse(0,8,68,60,0,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(-46,-32);
+  ctx.lineTo(-66,-90);
+  ctx.lineTo(-16,-55);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(46,-32);
+  ctx.lineTo(66,-90);
+  ctx.lineTo(16,-55);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#a8d8ea";
+  ctx.beginPath();
+  ctx.arc(-60,-58,16,0,Math.PI*2);
+  ctx.arc(-28,-72,16,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle = "#2c4a5d";
+  ctx.beginPath();
+  ctx.ellipse(-22,5,4,7,0,0,Math.PI*2);
+  ctx.ellipse(22,5,4,7,0,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.fillStyle = "#f5d76e";
+  ctx.beginPath();
+  ctx.ellipse(0,18,7,5,0,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#2c4a5d";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-32,24);ctx.lineTo(-72,18);
+  ctx.moveTo(-32,32);ctx.lineTo(-72,32);
+  ctx.moveTo(32,24);ctx.lineTo(72,18);
+  ctx.moveTo(32,32);ctx.lineTo(72,32);
+  ctx.stroke();
+
+  ctx.fillStyle = "#fff";
+  ctx.font = "bold 22px serif";
+  ctx.textAlign = "center";
+  ctx.fillText("LYDIA",0,158);
+
+  ctx.restore();
+
+  ctx.fillStyle = "rgba(44,74,93,.7)";
+  ctx.font = "16px serif";
+  ctx.textAlign = "center";
+  ctx.fillText(String(index + 1).padStart(2,"0"),cx,h-30);
+}
+
+function createCardTexture(index){
+  const canvas = document.createElement("canvas");
+  canvas.width = 360;
+  canvas.height = 520;
+
+  const ctx = canvas.getContext("2d");
+
+  if(cardBackImage && cardBackImage.complete){
+    ctx.drawImage(cardBackImage,0,0,canvas.width,canvas.height);
+
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 10;
+    ctx.strokeRect(8,8,canvas.width-16,canvas.height-16);
+
+    ctx.strokeStyle = "rgba(124,196,221,.9)";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(20,20,canvas.width-40,canvas.height-40);
+  }else{
+    drawFallbackCard(ctx,canvas.width,canvas.height,index);
+  }
+
+  return canvas;
+}
+
+/* 卡牌动画 */
+let cardsAnimationId = null;
+let cardsReady = false;
+
+function initCards(){
+  const canvas = $("cardsCanvas");
+  const ctx = canvas.getContext("2d");
+
+  const cards = [];
+  const colors = [
+    "#a8d8ea","#7cc4dd","#b8e0d2","#c8b6e2",
+    "#f5d76e","#f5cba7","#8bc9ff","#c095ed"
+  ];
+
+  function resize(){
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+  }
+
+  resize();
+  addEventListener("resize",resize);
+
+  for(let i=0;i<8;i++){
+    cards.push({
+      index:i,
+      angle:(Math.PI * 2 / 8) * i,
+      color:colors[i],
+      texture:createCardTexture(i),
+      delay:i * .08,
+      tilt:(Math.random()-.5) * .14
+    });
+  }
+
+  const startedAt = performance.now();
+  let rotation = 0;
+
+  function drawCard(card,x,y,scale,rotationAngle,alpha){
+    const width = 156;
+    const height = 226;
+
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(rotationAngle);
+    ctx.scale(scale,scale);
+    ctx.globalAlpha = alpha;
+
+    ctx.shadowColor = card.color;
+    ctx.shadowBlur = 24;
+    ctx.shadowOffsetY = 12;
+
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(-width/2,-height/2,width,height);
+
+    ctx.shadowColor = "transparent";
+    ctx.shadowBlur = 0;
+
+    ctx.drawImage(card.texture,-width/2,-height/2,width,height);
+
+    ctx.strokeStyle = card.color;
+    ctx.lineWidth = 4;
+    ctx.shadowColor = card.color;
+    ctx.shadowBlur = 12;
+    ctx.strokeRect(-width/2,-height/2,width,height);
+
+    ctx.restore();
+  }
+
+  function render(now,entering){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    const elapsed = (now - startedAt) / 1000;
+    const centerX = canvas.width/2;
+    const centerY = canvas.height/2;
+
+    rotation += entering ? .003 : .001;
+
+    let allReady = true;
+
+    cards.forEach(card => {
+      const local = elapsed - card.delay;
+
+      if(local < 0){
+        allReady = false;
+        return;
+      }
+
+      const duration = .9;
+      const progress = Math.min(local / duration,1);
+
+      if(progress < 1) allReady = false;
+
+      const ease = 1 - Math.pow(1-progress,3);
+
+      const maxSpreadX = Math.min(canvas.width * .36,460);
+      const maxSpreadY = Math.min(canvas.height * .22,200);
+
+      const currentSpread = 70 + maxSpreadX * ease;
+      const currentSpreadY = 50 + maxSpreadY * ease;
+
+      const x = centerX + Math.cos(card.angle + rotation) * currentSpread;
+      const y = centerY + Math.sin(card.angle + rotation) * currentSpreadY;
+
+      const depth = .85 + (Math.sin(card.angle + rotation)+1) * .12;
+      const scale = (.7 + ease * .32) * depth;
+
+      const rotationAngle = card.tilt * (1-ease) + Math.sin(card.angle + rotation) * .04;
+
+      drawCard(card,x,y,scale,rotationAngle,ease);
+    });
+
+    if(entering && !allReady){
+      cardsAnimationId = requestAnimationFrame(t => render(t,true));
+    }else{
+      if(entering){
+        cardsReady = true;
+      }
+
+      cardsAnimationId = requestAnimationFrame(t => render(t,false));
+    }
+  }
+
+  render(performance.now(),true);
+
+  canvas.addEventListener("click",event => {
+    if(!cardsReady) return;
+
+    playClick();
+    canvas.style.pointerEvents = "none";
+
+    if(cardsAnimationId){
+      cancelAnimationFrame(cardsAnimationId);
+    }
+
+    showScreen("home");
+    cardsReady = false;
+    updateReuseButton();
+  },{once:true});
+}
+
+/* 上传与最近图片 */
+function openPhotoModal(photos){
+  state.selectedPhotos = photos;
+  $("modal").classList.add("visible");
+}
+
+$("photoInput").addEventListener("change",event => {
+  const files = Array.from(event.target.files)
+    .filter(file => file.type.startsWith("image/"))
+    .slice(0,100);
+
+  event.target.value = "";
+
+  if(files.length === 0) return;
+
+  playClick();
+
+  Promise.all(
+    files.map(file => new Promise(resolve => {
+      const reader = new FileReader();
+
+      reader.onload = event => resolve(event.target.result);
+      reader.onerror = () => resolve(null);
+
+      reader.readAsDataURL(file);
+    }))
+  ).then(results => {
+    const photos = results.filter(Boolean);
+
+    if(photos.length === 0) return;
+
+    state.photos = [...photos];
+    state.selectedPhotos = [...photos];
+
+    savePhotos(photos);
+    updateReuseButton();
+    openPhotoModal(photos);
+  });
+});
+
+$("reuseBtn").addEventListener("click",() => {
+  const saved = readSavedPhotos();
+
+  if(saved.length === 0){
+    updateReuseButton();
+    return;
+  }
+
+  state.photos = [...saved];
+  playClick();
+  openPhotoModal(saved);
+});
+
+$("noBtn").addEventListener("click",() => {
+  playClick();
+  $("modal").classList.remove("visible");
+});
+
+$("yesBtn").addEventListener("click",() => {
+  if(state.selectedPhotos.length === 0) return;
+
+  playClick();
+  $("modal").classList.remove("visible");
+
+  setTimeout(() => {
+    showScreen("game");
+    startGame(state.selectedPhotos);
+  },280);
+});
+
+/* 抽奖动画 */
+let gameFrame = null;
+let gameRunToken = 0;
+
+function clearGame(){
+  if(gameFrame){
+    cancelAnimationFrame(gameFrame);
+    gameFrame = null;
+  }
+
+  $("particles").innerHTML = "";
+  $("resultLayer").classList.remove("visible");
+  $("resultButtons").classList.remove("visible");
+  $("gameStatus").classList.remove("visible");
+  $("resultImg").removeAttribute("src");
+
+  const canvas = $("gameCanvas");
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+function createSparkBurst(){
+  const container = $("particles");
+  const colors = ["#fff","#f5d76e","#a8d8ea","#b8e0d2","#c8b6e2"];
+
+  for(let i=0;i<45;i++){
+    const spark = document.createElement("i");
+    spark.className = "spark";
+
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 130 + Math.random() * 460;
+
+    spark.style.left = "50%";
+    spark.style.top = "50%";
+    spark.style.color = colors[Math.floor(Math.random()*colors.length)];
+    spark.style.setProperty("--x",`${Math.cos(angle)*distance}px`);
+    spark.style.setProperty("--y",`${Math.sin(angle)*distance}px`);
+    spark.style.animationDelay = `${Math.random()*.18}s`;
+
+    container.appendChild(spark);
+  }
+}
+
+function loadImages(sources){
+  return Promise.all(
+    sources.map(src => new Promise(resolve => {
+      const img = new Image();
+
+      img.onload = () => resolve(img);
+      img.onerror = () => resolve(null);
+      img.src = src;
+    }))
+  );
+}
+
+async function startGame(photos){
+  if(!photos || photos.length === 0){
+    showScreen("home");
+    return;
+  }
+
+  clearGame();
+
+  const token = ++gameRunToken;
+
+  const canvas = $("gameCanvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+
+  const sources = shuffle(photos);
+  const images = await loadImages(sources);
+
+  if(token !== gameRunToken) return;
+
+  const valid = images
+    .map((img,index) => img ? {img,src:sources[index]} : null)
+    .filter(Boolean);
+
+  if(valid.length === 0){
+    showScreen("home");
+    return;
+  }
+
+  const colors = [
+    "#a8d8ea","#7cc4dd","#b8e0d2","#c8b6e2","#f5d76e"
+  ];
+
+  const items = valid.map((item,index) => ({
+    ...item,
+    x:80 + Math.random() * Math.max(100,canvas.width-160),
+    y:140 + Math.random() * Math.max(100,canvas.height-280),
+    vx:(Math.random()-.5) * (4 + Math.random()*6),
+    vy:(Math.random()-.5) * (4 + Math.random()*6),
+    rotation:(Math.random()-.5) * .7,
+    rotationSpeed:(Math.random()-.5) * .025,
+    width:Math.max(108,Math.min(168,canvas.width*.1)),
+    height:Math.max(142,Math.min(218,canvas.width*.14)),
+    color:colors[index % colors.length],
+    opacity:1,
+    scale:1,
+    fading:false,
+    winner:false
+  }));
+
+  let winnerIndex = Math.floor(Math.random() * items.length);
+
+  if(items.length > 1 && state.lastWinnerSrc){
+    const available = items
+      .map((item,index) => ({item,index}))
+      .filter(entry => entry.src !== state.lastWinnerSrc);
+
+    if(available.length > 0){
+      winnerIndex = available[
+        Math.floor(Math.random() * available.length)
+      ].index;
+    }
+  }
+
+  const winner = items[winnerIndex];
+  winner.winner = true;
+  state.lastWinnerSrc = winner.src;
+
+  $("gameStatus").textContent = "照片正在旋转 · 请等待命运揭晓";
+  $("gameStatus").classList.add("visible");
+
+  const startedAt = performance.now();
+  const runDuration = 3000;
+  let revealStarted = false;
+  let revealAt = 0;
+
+  function drawPhoto(item){
+    if(item.opacity <= .01) return;
+
+    ctx.save();
+    ctx.globalAlpha = item.opacity;
+    ctx.translate(item.x,item.y);
+    ctx.rotate(item.rotation);
+    ctx.scale(item.scale,item.scale);
+
+    ctx.shadowColor = item.color;
+    ctx.shadowBlur = 22;
+    ctx.shadowOffsetY = 10;
+
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(-item.width/2,-item.height/2,item.width,item.height);
+
+    ctx.shadowBlur = 0;
+    ctx.drawImage(
+      item.img,
+      -item.width/2 + 7,
+      -item.height/2 + 7,
+      item.width - 14,
+      item.height - 14
+    );
+
+    ctx.strokeStyle = item.color;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-item.width/2,-item.height/2,item.width,item.height);
+
+    ctx.restore();
+  }
+
+  function render(now){
+    if(token !== gameRunToken) return;
+
+    const elapsed = now - startedAt;
+    const progress = Math.min(elapsed / runDuration,1);
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    if(!revealStarted && progress >= 1){
+      revealStarted = true;
+      revealAt = now;
+      $("gameStatus").textContent = "命运正在靠近";
+      winner.x = canvas.width/2;
+      winner.y = canvas.height/2;
+    }
+
+    items.forEach(item => {
+      if(!revealStarted){
+        const speed = Math.max(.12,1 - progress*.82);
+
+        item.x += item.vx * speed;
+        item.y += item.vy * speed;
+        item.rotation += item.rotationSpeed * speed;
+
+        if(item.x < item.width/2 || item.x > canvas.width-item.width/2){
+          item.vx *= -1;
+        }
+
+        if(item.y < item.height/2 || item.y > canvas.height-item.height/2){
+          item.vy *= -1;
+        }
+
+        drawPhoto(item);
+        return;
+      }
+
+      const revealProgress = Math.min((now - revealAt) / 1350,1);
+      const ease = 1 - Math.pow(1-revealProgress,3);
+
+      if(item === winner){
+        const targetScale = Math.min(2.65,Math.max(1.7,canvas.width/470));
+
+        item.x += (canvas.width/2 - item.x) * .09;
+        item.y += (canvas.height/2 - item.y) * .09;
+        item.rotation += (0 - item.rotation) * .11;
+        item.scale = 1 + (targetScale - 1) * ease;
+        item.opacity = 1;
+        drawPhoto(item);
+      }else{
+        item.opacity = 1 - ease;
+        item.x += item.vx * .18;
+        item.y += item.vy * .18;
+        item.rotation += item.rotationSpeed * .2;
+        drawPhoto(item);
+      }
+    });
+
+    if(!revealStarted || (now - revealAt) < 1550){
+      gameFrame = requestAnimationFrame(render);
+    }else{
+      finishReveal(winner,token);
+    }
+  }
+
+  gameFrame = requestAnimationFrame(render);
+}
+
+async function finishReveal(winner,token){
+  if(token !== gameRunToken) return;
+
+  const canvas = $("gameCanvas");
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  if(gameFrame){
+    cancelAnimationFrame(gameFrame);
+    gameFrame = null;
+  }
+
+  const resultImg = $("resultImg");
+  resultImg.src = winner.src;
+
+  $("gameStatus").textContent = "这是属于你的青春瞬间";
+  createSparkBurst();
+  playReveal();
+
+  await wait(120);
+
+  if(token !== gameRunToken) return;
+
+  $("resultLayer").classList.add("visible");
+
+  await wait(3500);
+
+  if(token !== gameRunToken) return;
+
+  $("resultButtons").classList.add("visible");
+}
+
+/* 结果按钮 */
+$("againBtn").addEventListener("click",() => {
+  const saved = state.photos.length > 0
+    ? [...state.photos]
+    : readSavedPhotos();
+
+  if(saved.length === 0){
+    showScreen("home");
+    updateReuseButton();
+    return;
+  }
+
+  playClick();
+
+  gameRunToken++;
+
+  $("resultLayer").classList.remove("visible");
+  $("resultButtons").classList.remove("visible");
+  $("particles").innerHTML = "";
+  $("resultImg").removeAttribute("src");
+
+  // 复用当前批次的图片，重新弹出 Yes/No
+  state.selectedPhotos = [...saved];
+  $("modal").classList.add("visible");
+});
+
+$("backHomeBtn").addEventListener("click",() => {
+  playClick();
+
+  gameRunToken++;
+  clearGame();
+
+  showScreen("home");
+  updateReuseButton();
+});
+
+/* 启动：开屏使用 pointerdown */
+let introStarted = false;
+
+function startIntro(){
+  if(introStarted) return;
+  introStarted = true;
+
+  startBGM();
+  showScreen("cards");
+  initCards();
+}
+
+$("intro").addEventListener("pointerdown", startIntro, { once:true });
+
+updateReuseButton();
+</script>
+</body>
+</html>
+```
+
+## 使用说明
+
+1. 准备文件夹：
+   ```text
+   ~/Desktop/LydiaGame/
+   ├── index.html        ← 上面这段完整代码
+   ├── bgm.mp3           ← 你的背景音乐
+   └── card-back.jpg     ← 你的卡牌背面图（可选）
+   ```
+
+2. Chrome 打开 `index.html`。
+
+3. 如果页面打开后还是旧版本，强制刷新：
+   ```text
+   Command + Option + R
+   ```
+
+## 本版关键修复
+
+| 项目 | 状态 |
+|------|------|
+| 开屏点击 | 改为 `pointerdown`，首次点击直接进入 |
+| 背景音乐 | 开屏 `pointerdown` 时调用 `startBGM()`，无需再依赖任何其他事件 |
+| 上传图片保存 | `localStorage` 保存最近一次的全部图片 |
+| 内存兜底 | 保存失败时 `state.photos` 仍保留，"再来一次"可继续 |
+| "再来一次"复用旧图 | 优先用 `state.photos`，其次 `localStorage`，不打开文件选择器 |
+| "再来一次"重弹 Yes/No | `openPhotoModal(saved)` |
+| 避开连续同图 | `do/while` 循环重新抽取 |
+| 中奖只留一张 | `ctx.clearRect` 后只显示 `resultImg` |
+| 其他图片淡出 | `opacity: 1 - ease` |
+| 不含 Gallery | 没有清空相册，没有相册页 |
+| 卡背图 | 优先 `card-back.jpg`，失败时使用蓝白备用卡背 |
+| 减少卡顿 | 粒子 70→50，spark 58→45，背景点 32→24，petal 8→6 |
+
+如果运行中还有问题，把**具体页面** + **实际表现**告诉我，我再定位。
